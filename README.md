@@ -8,16 +8,28 @@ German Verb conjugator for all of its tenses, moods, and persons.
 
 ## Running
 
+Follow the steps below:
+
+```
+git clone https://github.com/svhawkins/german-verb-conjugator.git <repo dir>
+cd <repo dir>
+source setup
+```
+
+The `setup` script gives the aliases `conjugator` and `tests`. `conjugator` runs the conjugator itself and `tests` runs all
+of the unit and integration tests for the conjugator.
+
 
 **************************************************************
 
 # Further information:
 1. Information regarding (in)separable prefixes (for `prefixes.txt`):
-    * https://www.dartmouth.edu/~deutsch/Grammatik/Wortbildung/Separables.html
-    * https://www.dartmouth.edu/~deutsch/Grammatik/Wortbildung/Inseparables.html
+    * [Seperable prefixes](https://www.dartmouth.edu/~deutsch/Grammatik/Wortbildung/Separables.html)
+    * [Inseperable prefixes](https://www.dartmouth.edu/~deutsch/Grammatik/Wortbildung/Inseparables.html)
     
 2. Information regarding strong, mixed, and preterite-present verbs (for `verbs.txt`)
-    * https://en.wikipedia.org/wiki/Germanic_strong_verb 
-    * https://en.wikipedia.org/wiki/Germanic_verbs#Preterite-presents
-    * https://www.dartmouth.edu/~deutsch/Grammatik/Verbs/StrongVerbs.html 
+    * [Strong Verbs](https://en.wikipedia.org/wiki/Germanic_strong_verb) 
+    * [Preterite-presents](https://en.wikipedia.org/wiki/Germanic_verbs#Preterite-presents)
+    * [Also Strong Verbs](https://www.dartmouth.edu/~deutsch/Grammatik/Verbs/StrongVerbs.html) 
+    * [Strong Verb Umlauts](https://resources.german.lsa.umich.edu/wp-content/uploads/2018/09/irreg_verbs_DNutting.pdf)
 

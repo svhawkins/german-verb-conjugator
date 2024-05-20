@@ -1,4 +1,4 @@
-# tests conjugator utilties (conjutils) module
+# tests conjugator (integration of conjutils and verbs modules)
 
 import pytest
 import conjutils

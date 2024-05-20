@@ -18,14 +18,20 @@ A Verb is constructed from the following:
             - infinitive : TODO: make as present stem instead?
             - past stem
             - past participle
-            - present endings (irregular and preterite presents)
+            - present endings (for irregular and preterite presents)
 """
 
 import re
 from enum import IntEnum
+from typing import Union
+
+# Auxiliary verbs, have partial conjugations: simple present + past indicative or subjunctive only
+# These are preconjugated before conjugating anything (so always available to non-auxiliary Verb __init__)
+Haben = None
+Werden = None
+Sein = None
 
 # enum classes for easier hash table access.
-
 class Person(IntEnum):
     FIRST = 0
     SECOND = 1
@@ -75,12 +81,12 @@ PERSON_OFFSET = ASPECT_OFFSET / len(Person) # 6 / 3 = 2
 NUMBER_OFFSET = PERSON_OFFSET / len(Number) # 2 / 2 = 1
 
 def table_hash(mood : int, tense : int, aspect : int, person : int, number : int) -> int: 
-    index = (MOOD_OFFSET * mood) + \
-    (TENSE_OFFSET * tense) + \
-    (ASPECT_OFFSET * aspect) + \
-    (PERSON_OFFSET * person) + \
-    (NUMBER_OFFSET * number)
-    return index
+	index = (MOOD_OFFSET * mood) + \
+	(TENSE_OFFSET * tense) + \
+	(ASPECT_OFFSET * aspect) + \
+	(PERSON_OFFSET * person) + \
+	(NUMBER_OFFSET * number)
+	return int(index)
 
 
 class Verb:
@@ -126,6 +132,9 @@ class Verb:
 	_past_endings = _empty # dependent on class
 	_subjunctive1_endings = ["e", "est", "e", "en", "et", "en"]
 	_subjunctive2_endings = _empty # dependent on class
+	
+    # set up future auxiliary
+	_future_aux = Werden if Werden is not None else None
 
 	def __init__(self, infinitive : str = "",
                  use_haben : bool = True,
@@ -155,6 +164,13 @@ class Verb:
 
         # flags
 		self._use_haben = use_haben
+		
+        # perfect auxiliary
+		self._perfect_aux = None
+		if Haben is not None and self._use_haben == True:
+			self._perfect_aux = Haben
+		elif Sein is not None and self._use_haben == False:
+			self._perfect_aux = Sein
 
 		# conjugation table
 		self._conjugation_table = ["" for person in range(n_entries)]
@@ -174,28 +190,55 @@ class Verb:
 		# 	conjugation = self._stems[tense] + ending + space + auxiliary
 		return conjugation
 	
+	def _get_range(self, enum_val : Union[Tense, tuple], enum_length : int, enum_type : IntEnum) -> tuple:
+		enum_range = []
+		if type(enum_val) is tuple:
+			enum_range = enum_val # leave as is
+		elif enum_val < enum_length:
+			enum_range.append(enum_type(enum_val)) # append singleton
+		else:
+			enum_range = [enum_type(val) for val in range(len(enum_type))] # just do 'em all
+		return tuple(enum_range)
+
+	
 	def conjugate(self,
-			      tense : int = len(Tense),
-				  mood : int = len(Mood),
-				  aspect : int = len(Aspect),
-				  person : int = len(Person),
-				  number : int = len(Number)):
+			      tense : Union[Tense, tuple]  = len(Tense),
+				  mood : Union[Mood, tuple] = len(Mood),
+				  aspect : Union[Aspect, tuple] = len(Aspect),
+				  person : Union[Person, tuple] = len(Person),
+				  number : Union[Number, tuple] = len(Number)):
 		"""
-		Conjugate a verb according provided tense, mood, aspect, person, and number.
+		Conjugate a verb according provided tense(s), mood(s), aspect(s), person(s), and number(s).
 
 		Parameters:
-			tense : int --> any one of the integer constants defined in IntEnum Tense
-			mood : int --> any one of the integer constants defined in IntEnum Mood
-			aspect : int --> any one of the integer constants defined in IntEnum Aspect
-			person : int --> any one of the integer constants defined in IntEnum Person
-			number : int --> any one of the integer constants defined in IntEnum Number
-		"""
+			tense : Tense or tuple(Tense) --> any of the integer constants defined in IntEnum Tense
+			mood : Mood or tuple(Mood) --> any of the integer constants defined in IntEnum Mood
+			aspect : Aspect or tuple(Aspect) --> any of the integer constants defined in IntEnum Aspect
+			person : Person or tuple(Person) --> any of the integer constants defined in IntEnum Person
+			number : Number or tuple(Number) --> any of the integer constants defined in IntEnum Number
 		
-        # TODO:
-		# make (recursive? idk maybe iterative) function to get list of hashes
-		indices = []
-		for index in indices:
-			self._conjugation_table[index] = self._get_conjugation(tense, mood, aspect, person, number)
+			By default, all parameters are set to having the length of their enumeration as the default unless explicitly
+			defined.
+		"""
+
+		# get table ranges
+		mood_range = self._get_range(mood, len(Tense), Tense)
+		aspect_range = self._get_range(aspect, len(Aspect), Aspect)
+		tense_range = self._get_range(tense, len(Tense), Tense)
+		person_range = self._get_range(person, len(Person), Person)
+		number_range = self._get_range(number, len(Number), Number)
+
+		for mood_idx in mood_range:
+			for tense_idx in aspect_range:
+				for aspect_idx in tense_range:
+					for person_idx in person_range:
+						for number_idx in number_range:
+							index = table_hash(mood_idx, tense_idx, aspect_idx, person_idx, number_idx)
+							self._conjugation_table[index] = self._get_conjugation(tense_idx,
+															  					   mood_idx,
+																				   aspect_idx,
+																				   person_idx,
+																				   number_idx)
 
 	def get_conjugation_at(self,
 						   tense: int,

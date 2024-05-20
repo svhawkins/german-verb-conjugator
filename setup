@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# need to be in same directory as everything else
+alias conjugator="python3.8 `pwd`/conjugator.py"
+alias tests="pytest `pwd`/test/test_verbs.py `pwd`/test/test_conjutils.py `pwd`/test/test_conjugator.py"
