@@ -11,7 +11,7 @@ Consists of the base class Verb and the following subclasses:
 
 The Verb class does most of the work in the conjugations.
 A Verb is constructed from the following:
-    - Its infinitive
+  - Its infinitive
 	- Haben/Sein perfect aspect auxiliary indicator
 	- (Optional) Prefix and whether it is separable
 	- (Optional) Parts to override default values from Verbs dataframe:
@@ -27,6 +27,7 @@ from typing import Union
 
 # Auxiliary verbs, have partial conjugations: simple present + past indicative or subjunctive only
 # These are preconjugated before conjugating anything (so always available to non-auxiliary Verb __init__)
+# these verbs are distinct from 'generic' verbs, that may happen to be haben, sein, or werden! <-- though won't be grammatically correct...
 Haben = None
 Werden = None
 Sein = None
@@ -55,7 +56,7 @@ class Mood(IntEnum):
 	IMPERATIVE = 1 # present only
 	SUBJUNCTIVE_1 = 2 # future has 2 subjunctives, present stem subjunctive
 	SUBJUNCTIVE_2 = 3 # future has 2 subjunctives, past stem subjunctive
-                      # past stem subjunctive for future is the conditional
+                    # past stem subjunctive for future is the conditional
 	
 
 # imperative is present indicative simple only, 2nd person sg/pl or 1st person pl
@@ -128,12 +129,15 @@ class Verb:
 	# static/protected class members --> constant for ALL verbs
 
 	_empty = ["", "", "", "", "", ""]
-	_present_endings = ["e", "st", "t", "en", "t", "en"]
+	_present_endings = ["e", "st", "t", "en", "t", "en"] #indicative
 	_past_endings = _empty # dependent on class
 	_subjunctive1_endings = ["e", "est", "e", "en", "et", "en"]
 	_subjunctive2_endings = _empty # dependent on class
+	_imperative_endings = _empty # TODO
+
+	_tense_to_ending = [_present_endings, _past_endings]
 	
-    # set up future auxiliary
+  # set up future auxiliary
 	_future_aux = Werden if Werden is not None else None
 
 	def __init__(self, infinitive : str = "",
@@ -158,14 +162,14 @@ class Verb:
 		self.subjunctive1_stem = "" # later derived
 		self.subjunctive2_stem = "" # later derived
 		
-        # prefix
+    # prefix
 		self._prefix = prefix[0]
 		self._is_separable = prefix[1]
 
-        # flags
+    # flags
 		self._use_haben = use_haben
 		
-        # perfect auxiliary
+    # perfect auxiliary
 		self._perfect_aux = None
 		if Haben is not None and self._use_haben == True:
 			self._perfect_aux = Haben
@@ -188,6 +192,25 @@ class Verb:
 		#space = " " if auxiliary != "" else "" # so no space AFTER
 		# if not is_none_value(tense, person):
 		# 	conjugation = self._stems[tense] + ending + space + auxiliary
+
+		# TODO: get pronoun from person + number
+		if aspect == Aspect.SIMPLE:
+			if tense != Tense.FUTURE:
+				# TODO: get conjugation using endings and verb stem, check if seperable
+				pass
+			else:
+				# TODO: get conjugation using werden endings + infinitive
+				pass
+		else:
+			if tense != Tense.FUTURE:
+				# TODO: get conjugation using haben/sein endings + past participle
+				pass
+			else:
+				# TODO: get conjugation using werden endings + past participle + haben/sein infinitive
+				pass
+		
+
+
 		return conjugation
 	
 	def _get_range(self, enum_val : Union[Tense, tuple], enum_length : int, enum_type : IntEnum) -> tuple:
@@ -287,7 +310,7 @@ class Strong(Verb):
 			self.stem = parts["present"][:-2] # remove the [ei]n
 			self.past_stem = parts["past"]
 			self.participle = parts["participle"]
-			if len(parts["conjugation"] > 0):
+			if len(parts["conjugation"]) > 0:
 				self._present_endings = parts["conjugation"]
 			
 		self.subjunctive1_stem = self.stem
@@ -345,7 +368,7 @@ class Mixed(Verb):
 			self.stem = parts["present"][:-2] # remove the [ei]n
 			self.past_stem = parts["past"]
 			self.participle = parts["participle"]
-			if len(parts["conjugation"] > 0):
+			if len(parts["conjugation"]) > 0:
 				self._present_endings = parts["conjugation"]
 			
 		self.subjunctive1_stem = self.stem

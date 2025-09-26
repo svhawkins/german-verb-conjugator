@@ -7,8 +7,6 @@ Provides functions to ease setting up the conjugator proper
 import re
 import verbs as v
 from enum import IntEnum
-import pandas as pd
-import numpy as np
 import os
 
 
@@ -35,15 +33,16 @@ def get_irregular_verbs() -> list:
 	4 (IrregularIdx.CONJUGATION): present tense conjugation (indicative) for irregular and preterite-present verbs
 
 	Return:
-		list[tuple[str, str, str, str, str]]
+		list[tuple[str, str, str, str, str, str]]
 	"""
-	file = open(os.environ["VERB_DATA_DIR"] + "/" + "verbs.txt", "r")
+	# file = open(os.environ["VERB_DATA_DIR"] + "/" + "verbs.txt", "r")
+	file = open("data" + "/" + "verbs.txt", "r")
 	lines = file.readlines()
 	file.close()
 
 	verbs = []
 	for line in lines:
-		verb = (line.rstrip("\n")).split(",") # remove the newline as well
+		verb = (line.rstrip("\n")).split(",")[:-1] # remove the newline as well
 		verb = tuple(verb)
 		verbs.append(verb)
 	return verbs
@@ -62,7 +61,7 @@ def find_verb_matches(word : str, verbs : list) -> list:
 			list[tuple[str, str, str, str, str]] --> list of irregular verb-tuples that match the word-ending regex pattern.
 	"""
 	matches = [verb for verb in verbs if re.findall("(" + verb[IrregularIdx.INFINITIVE] + ")" + "$", word) != []]
-	return matches
+	return matches[0] if len(matches) > 0 else []
 
 
 def construct_verb(word : str, match : tuple) -> v.Verb:
@@ -97,6 +96,7 @@ def get_last_prefix(matches : tuple):
 
 
 def get_prefix(word : str, prefixes_expr: str) -> tuple:
+
 	"""
 	Extract the prefixes from provided <word>.
 	
@@ -127,3 +127,31 @@ def get_prefix(word : str, prefixes_expr: str) -> tuple:
 		prefixes += prefix
 	root = word
 	return (prefixes, root)
+
+def determine_verb_class(word : str, matches : list[tuple[str, str, str, str, str]]) -> v.Verb:
+	'''Determines verb class based on presence within irregular matches and found properties'''
+	verb = None
+	found = False
+	parts = {}
+	found = len(matches) > 0
+	if found:
+		# update parts dictionary
+		parts = {"present" : matches[IrregularIdx.INFINITIVE],
+				 "past" : matches[IrregularIdx.PAST_STEM],
+				 "participle" : matches[IrregularIdx.PARTICIPLE],
+				 "conjugation" : ()
+				 }
+		if len(matches) > IrregularIdx.CONJUGATION:
+			parts["conjugation"] = matches[IrregularIdx.CONJUGATION]
+
+	
+		# strong or mixed?
+		if (matches[IrregularIdx.CATEGORY] == "M") or \
+		(matches[IrregularIdx.CATEGORY] == "PP"):
+			verb = v.Mixed(infinitive = word, use_haben = True, parts = parts)
+		else:
+			verb = v.Strong(infinitive = word, use_haben = True, parts = parts)
+	else:
+		# weak
+		verb = v.Weak(infinitive = word, use_haben = True, parts = parts)
+	return verb
